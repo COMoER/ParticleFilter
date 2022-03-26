@@ -211,6 +211,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# user definn
+# user define
+build
 kdtree.cpp
+particle_filter.cpp
+main.cpp
 
