@@ -28,7 +28,7 @@ protected:
         VectorState state;
         double weight;
 
-        Particle(double w, VectorState s=VectorState::Zero()) :
+        Particle(double w, VectorState s) :
                 state(std::move(s)), weight(w){}
     };
 
@@ -43,7 +43,7 @@ protected:
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Particle_Filter(int n);
+    Particle_Filter(int n,const VectorState& state0);
     VectorState query(){return _expectation();};
     virtual VectorState prediction_step(double deltat, VectorInput u){return VectorState();}
     virtual VectorState update_step(const vector<VectorOb> &obs){return VectorState();}
@@ -51,10 +51,10 @@ public:
 };
 
 template<int M, int N, int U>
-Particle_Filter<M, N, U>::Particle_Filter(int n) :
-        Ns(n), particles(make_shared<vector<Particle>>()), _e(0), _generator(0, 1. / n) {
+Particle_Filter<M, N, U>::Particle_Filter(int n,const VectorState& state0) :
+        Ns(n), particles(make_shared<vector<Particle>>()), _e(time(nullptr)), _generator(0, 1. / n) {
     // initial make all
-    for (int i = 0; i < n; ++i) particles->emplace_back(1. / n);
+    for (int i = 0; i < n; ++i) particles->emplace_back(1. / n,state0);
 }
 
 template<int M, int N, int U>
@@ -72,9 +72,9 @@ void Particle_Filter<M, N, U>::_resample() {
     for (int i = 0, j = 0; i < Ns; ++i) {
         const Particle &p = particles->data()[j];
         if (p.weight > sp + i * gap){
-            resampled_particles->emplace_back(1./Ns,p.state);
+            resampled_particles->push_back(p);
         }
-        else resampled_particles->emplace_back(1./Ns,particles->data()[++j].state);
+        else resampled_particles->push_back(particles->data()[++j]);
     }
     particles = resampled_particles;
 
